@@ -1,43 +1,57 @@
+import { Arena } from './src/arena';
 
-type Direction =
-  | "left"
-  | "right"
-  | "up"
-  | "down";
+// Entities are just an identifier, in this case their names
+const entities = ['joe', 'ganesh', 'ashley', 'devon'] as const;
+type Entity = (typeof entities)[keyof typeof entities];
 
-// 0, 0 is always current tile,
-// x & y are relative to current
-type Tile = [number, number];
+// Our fake sprites, single-character representations of entities
+const sprites = new Map<Entity, string>([
+  ['joe', 'J'],
+  ['ganesh', 'G'],
+  ['ashley', 'A'],
+  ['devon', 'D']
+]);
 
-type Option<T> = | T | null;
+const teams = new Map<Entity, 0 | 1>([
+  ['joe', 0],
+  ['ganesh', 0],
+  ['ashley', 1],
+  ['devon', 1]
+]);
 
-type Action = {
-  name: string;
-  inputMovement: Direction[];
-  outputEffectedTiles: Tile[];
-  // Function which operates on any entities which reside
-  //  in the outputEffectedTiles, relative to the ending position of
-  //  the entity inducing this action.
-  outputEffect: (entities: Option<Entity>[]) => void
-};
+const arena: Arena = new Arena(9, 12);
 
-type Entity = {
-  id: number;
-  currentHealth: number;
+// Update starting positions
+arena.set(entities[0], [3, 2]);
+arena.set(entities[1], [6, 2]);
+arena.set(entities[2], [3, 9]);
+arena.set(entities[3], [6, 9]);
+
+function main(): void {
+  const currentTurnIdx: keyof typeof entities = 0;
+
+  let winConditionAcheived: boolean = false;
+
+  while (!winConditionAcheived) {
+    const takingTurn: Entity = entities[currentTurnIdx];
+
+    // Get the current position of the entity
+    const maybeFound: [number, number] | undefined = arena.find(takingTurn);
+    if (maybeFound === undefined) throw new Error(`Couldn't find ${takingTurn} in the arena, fatal error!`);
+
+    const [x, y]: [number, number] = maybeFound;
+    
+    // Get list of legal movements given entity's position
+  
+    // Get list of possible actions for this entity
+
+    // Poll for movement input
+
+    // Induce movement
+
+    // Check the 
+  }
 }
 
-const excelsior: Action = {
-  name: "Excelsior",
-  inputMovement: ["left", "right", "right"],
-  outputEffectedTiles: [[-1, 1]],
-  outputEffect: (entities: Option<Entity>[]) => {
-    for (let entityOpt of entities) {
-      if (entityOpt === null) continue;
-
-      // If there is an entity in the effected tile,
-      // subtract 1 from its health.
-      entityOpt.currentHealth -= 1;
-    }
-  }
-};
+main();
 

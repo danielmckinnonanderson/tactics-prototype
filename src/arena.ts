@@ -1,3 +1,4 @@
+import { Direction } from "./actions";
 import { toSprite } from "./sprites";
 
 // Arena is a 2D array of tiles, where a tile
@@ -40,7 +41,6 @@ export class Arena {
         const col = row[j];
 
         if (col === entity) {
-          console.info(`Found ${entity} at ${i}, ${j}`);
           return [i, j];
         }
       }
@@ -67,6 +67,33 @@ export class Arena {
     }
 
     this.squares[x][y] = entity;
+  }
+
+  legalMovementsFrom(position: [x: number, y: number]): Direction[] {
+    const [x, y] = position;
+    const legalDirections: Direction[] = [];
+
+    if (this.squares[x - 1] !== undefined
+    && this.squares[x - 1][y] !== null) {
+      legalDirections.push('up');
+    }
+
+    if (this.squares[x + 1] !== undefined
+    && this.squares[x + 1][y] !== null) {
+      legalDirections.push('down');
+    }
+ 
+    if (this.squares[x] !== undefined
+    && this.squares[x][y - 1] !== null) {
+      legalDirections.push('left');
+    }
+
+    if (this.squares[x] !== undefined
+    && this.squares[x][y + 1] !== null) {
+      legalDirections.push('right');
+    }
+
+    return legalDirections;
   }
 
   value(): ArenaSquares {

@@ -1,3 +1,4 @@
+import { Direction } from './src/actions';
 import { Arena } from './src/arena';
 
 // Entities are just an identifier, in this case their names
@@ -27,29 +28,53 @@ arena.set(entities[1], [6, 2]);
 arena.set(entities[2], [3, 9]);
 arena.set(entities[3], [6, 9]);
 
+type TakingTurnState = {
+  movementPointsRemaining: number;
+  movementHistory: Direction[];
+  ownerEndedTurn: boolean;
+};
+
 function main(): void {
   const currentTurnIdx: keyof typeof entities = 0;
 
   let winConditionAcheived: boolean = false;
 
   while (!winConditionAcheived) {
-    const takingTurn: Entity = entities[currentTurnIdx];
+    const intermediateState: TakingTurnState = {
+      // Every entity will get 3 movement points for now
+      movementPointsRemaining: 3,
 
-    // Get the current position of the entity
-    const maybeFound: [number, number] | undefined = arena.find(takingTurn);
-    if (maybeFound === undefined) throw new Error(`Couldn't find ${takingTurn} in the arena, fatal error!`);
+      // Update movement history as the owner inputs legal movements
+      movementHistory: [],
 
-    const [x, y]: [number, number] = maybeFound;
-    
-    // Get list of legal movements given entity's position
-  
-    // Get list of possible actions for this entity
+      // If the owner ends their turn, we will induce
+      // action satisfied by current movement & proceed
+      // to next entity's turn
+      ownerEndedTurn: false
+    };
 
-    // Poll for movement input
+    while (intermediateState.ownerEndedTurn === false) {
+      const takingTurn: Entity = entities[currentTurnIdx];
 
-    // Induce movement
+      // Get the current position of the entity
+      const maybeFound: [number, number] | undefined = arena.find(takingTurn);
 
-    // Check the 
+      if (maybeFound === undefined) {
+        throw new Error(`Couldn't find ${takingTurn} in the arena, fatal error!`);
+      }
+
+      const [x, y]: [number, number] = maybeFound;
+      
+      // Get list of legal movements given entity's position
+      const legalMovements: Direction[] = arena.legalMovementsFrom([x, y]);
+      // Get list of possible actions for this entity
+
+      // Poll for movement input
+
+      // Induce movement
+
+      // Check the 
+    }
   }
 }
 

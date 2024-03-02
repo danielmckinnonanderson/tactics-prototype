@@ -17,19 +17,14 @@ type Action = {
   // Function which operates on any entities which reside
   //  in the outputEffectedTiles, relative to the ending position of
   //  the entity inducing this action.
-  outputEffect: (entities: Option<Entity>[]) => void
+  outputEffect: (entities: Option<any>[]) => void
 };
-
-type Entity = {
-  id: number;
-  currentHealth: number;
-}
 
 const excelsior: Action = {
   name: "Excelsior",
   inputMovement: ["left", "right", "right"],
   outputEffectedTiles: [[-1, 1]],
-  outputEffect: (entities: Option<Entity>[]) => {
+  outputEffect: (entities: Option<any>[]) => {
     for (let entityOpt of entities) {
       if (entityOpt === null) continue;
 

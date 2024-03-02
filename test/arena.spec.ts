@@ -52,5 +52,18 @@ describe('Arena', () => {
     // After disc 2
     expect(arena.find('aerith')).toBeUndefined();
   });
+
+  test('can convert its board to a string representation', () => {
+    const sq = [
+      ['cloud', null, 'barret'],
+      [null, 'tifa', null]
+    ];
+
+    const arena = Arena.fromSquares(sq);
+    const result = arena.display();
+
+    expect(result)
+      .toEqual(' C |   | B \n   | T |   ');
+  })
 });
 

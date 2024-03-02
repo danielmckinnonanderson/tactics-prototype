@@ -1,9 +1,7 @@
+import { toSprite } from "./sprites";
 
 // Arena is a 2D array of tiles, where a tile
 // is either null (for unoccupied) or a string
-
-import { toSprite } from "./sprites";
-
 // identifier for the entity that occupies it.
 export type ArenaSquares = (string | null)[][];
 
@@ -68,7 +66,6 @@ export class Arena {
       };
     }
 
-
     this.squares[x][y] = entity;
   }
 
@@ -80,14 +77,13 @@ export class Arena {
     // Convert empty (null) squares to whitespace ' ',
     // convert entities into 'sprites' (single characters)
     const format = (squares: ArenaSquares): string => {
-      return squares.map(row => {
-          return row.map(col => {
-            switch (typeof col) {
-              case 'string': return toSprite(col);
-              default: return ' ';
-            }
-          }).join();
-        }).join();
+      const displaySquare = (entity: string | null): string => 
+        ` ${entity === null ? ' ' : toSprite(entity)} `;
+
+      // Columns are separated by pipes, rows by newlines
+      return squares.map(row =>
+          row.map(col => displaySquare(col)).join('|')
+        ).join('\n');
     }
 
     const formatted = format(this.squares);

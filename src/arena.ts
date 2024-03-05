@@ -1,4 +1,4 @@
-import { Direction } from "./actions";
+import { Direction, coordsFromDirection } from "./actions";
 import { toSprite } from "./sprites";
 
 // Arena is a 2D array of tiles, where a tile
@@ -49,6 +49,61 @@ export class Arena {
     return undefined;
   }
 
+  /**
+   * Move the given entity to the specified position.
+   * If the position or entity do not exist, return `undefined`.
+   * If successful, return the new position (same as the argument provided)
+   */
+  moveTo(entity: string, to: [x: number, y: number]): [x: number, y: number] | undefined {
+    const currentPos = this.find(entity);
+
+    if (currentPos === undefined) {
+      console.warn(`Called move for entity ${entity} but it wasn't found in the arena.`);
+      return;
+    }
+
+    // Update the old position to be empty.
+    // We don't need to check for errors here because our call to `find` earlier
+    // means that we know the position & entity exist.
+    this.set(null, currentPos);
+    // Update the new position to contain the entity
+    const updated: void | { error: any } = this.set(entity, to);
+
+    // Check for errors
+    if (typeof updated === "object" && "error" in updated) {
+      console.warn(updated.error);
+      return
+    }
+
+    return to;
+  }
+
+  moveInDirection(entity: string, direction: Direction): [x: number, y: number] | undefined {
+    const currentPos = this.find(entity);
+
+    if (currentPos === undefined) { 
+      console.warn(`Called move for entity ${entity} but it wasn't found in the arena.`);
+      return undefined;
+    }
+
+    const nextPosition = coordsFromDirection(currentPos, direction);
+
+    if (!this.isSquareEmpty(nextPosition)) {
+      console.warn(`Called move for entity ${entity} but the desired position is illegal. Desired position is ${nextPosition}`);
+    }
+
+    this.set(null, currentPos);
+
+    const updated: void | { error: any } = this.set(entity, nextPosition);
+
+    if (typeof updated === "object" && "error" in updated) {
+      console.warn(updated.error);
+      return
+    }
+
+    return nextPosition;
+  }
+
   set(entity: string | null, position: [x: number, y: number]): void | { error: any } {
     const [x, y] = position;
 
@@ -74,26 +129,36 @@ export class Arena {
     const legalDirections: Direction[] = [];
 
     if (this.squares[x - 1] !== undefined
-    && this.squares[x - 1][y] !== null) {
+    && this.squares[x - 1][y] === null) {
       legalDirections.push('up');
     }
 
     if (this.squares[x + 1] !== undefined
-    && this.squares[x + 1][y] !== null) {
+    && this.squares[x + 1][y] === null) {
       legalDirections.push('down');
     }
  
     if (this.squares[x] !== undefined
-    && this.squares[x][y - 1] !== null) {
+    && this.squares[x][y - 1] === null) {
       legalDirections.push('left');
     }
 
     if (this.squares[x] !== undefined
-    && this.squares[x][y + 1] !== null) {
+    && this.squares[x][y + 1] === null) {
       legalDirections.push('right');
     }
 
     return legalDirections;
+  }
+
+  has(position: [x: number, y: number]): boolean {
+    return this.squares[position[0]] !== undefined 
+      && this.squares[position[0]][position[1]] !== undefined;
+  }
+
+  isSquareEmpty(position: [number, number]): boolean {
+    return this.squares[position[0]] !== undefined 
+      && this.squares[position[0]][position[1]] === null;
   }
 
   value(): ArenaSquares {

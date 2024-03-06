@@ -1,46 +1,33 @@
-import { Direction, coordsFromDirection } from "./actions";
-import { toSprite } from "./sprites";
+import { Direction } from "./actions";
 
 // Arena is a 2D array of tiles, where a tile
 // is either null (for unoccupied) or a string
 // identifier for the entity that occupies it.
 export type ArenaSquares = (string | null)[][];
 
-export class Arena {
-  private width: number;
-  private height: number;
-  private squares: ArenaSquares;
+export type Square = [number, number];
 
-  constructor(width: number, height: number) {
-    this.width = width;
-    this.height = height;
-    this.squares = Array.from({ length: this.height }, () => Array(width).fill(null));
+export namespace Arena {
+  /**
+   * Create a new arena with the given width and height.
+   * Initialize all squares to `null`.
+   */
+  export function create(width: number, height: number): ArenaSquares {
+    return Array.from({ length: height }, () => Array(width).fill(null));
   }
 
   /**
-   * Create a new arena from the given squares.
-   * Irregular-sized row / column arenas are NOT SUPPORTED,
-   * function will not error but behavior will be irregular.
+   * Find the position of the given entity within the arena provided.
+   * If the entity does not exist on the board, returns `undefined`.
    */
-  public static fromSquares(squares: ArenaSquares): Arena {
-    let result = new Arena(squares.length, squares[0].length);
-    result.squares = squares;
+  export function find(entity: string, within: ArenaSquares): Square | undefined {
+    for (let i = 0; i < within.length; i++) {
+      const column = within[i];
 
-    return result;
-  }
+      for (let j = 0; j < column.length; j++) {
+        const cell = column[j];
 
-  /**
-   * Return the coordinates on `squares` where the given
-   * entity resides, or `undefined` if the entity is not found.
-   */
-  find(entity: string): [number, number] | undefined {
-    for (let i = 0; i < this.squares.length; i++) {
-      const row = this.squares[i];
-
-      for (let j = 0; j < row.length; j++) {
-        const col = row[j];
-
-        if (col === entity) {
+        if (cell === entity) {
           return [i, j];
         }
       }
@@ -49,138 +36,173 @@ export class Arena {
     return undefined;
   }
 
-  /**
-   * Move the given entity to the specified position.
-   * If the position or entity do not exist, return `undefined`.
-   * If successful, return the new position (same as the argument provided)
+  /** 
+   * Move the given entity to the specified position within the arena provided.
+   * Updates the arena in place, putting the entity in the specified position and
+   *  setting its previous position to `null` (empty).
+   * If the entity does not exist on the baord, or desired position is illegal, returns `undefined`.
    */
-  moveTo(entity: string, to: [x: number, y: number]): [x: number, y: number] | undefined {
-    const currentPos = this.find(entity);
-
-    if (currentPos === undefined) {
-      console.warn(`Called move for entity ${entity} but it wasn't found in the arena.`);
-      return;
-    }
-
-    // Update the old position to be empty.
-    // We don't need to check for errors here because our call to `find` earlier
-    // means that we know the position & entity exist.
-    this.set(null, currentPos);
-    // Update the new position to contain the entity
-    const updated: void | { error: any } = this.set(entity, to);
-
-    // Check for errors
-    if (typeof updated === "object" && "error" in updated) {
-      console.warn(updated.error);
-      return
-    }
-
-    return to;
-  }
-
-  moveInDirection(entity: string, direction: Direction): [x: number, y: number] | undefined {
-    const currentPos = this.find(entity);
+  export function moveInDirection(
+    entity: string,
+    direction: Direction,
+    within: ArenaSquares
+  ): Square | undefined {
+    const currentPos = find(entity, within);
 
     if (currentPos === undefined) { 
       console.warn(`Called move for entity ${entity} but it wasn't found in the arena.`);
       return undefined;
     }
 
-    const nextPosition = coordsFromDirection(currentPos, direction);
+    const nextPosition = squareFromDirection(currentPos, direction);
 
-    if (!this.isSquareEmpty(nextPosition)) {
+    if (!isSquareEmpty(nextPosition, within)) {
       console.warn(`Called move for entity ${entity} but the desired position is illegal. Desired position is ${nextPosition}`);
+      return undefined;
     }
 
-    this.set(null, currentPos);
-
-    const updated: void | { error: any } = this.set(entity, nextPosition);
+    set(null, currentPos, within);
+    const updated: void | { error: any } = set(entity, nextPosition, within);
 
     if (typeof updated === "object" && "error" in updated) {
       console.warn(updated.error);
-      return
+      return;
     }
 
     return nextPosition;
   }
 
-  set(entity: string | null, position: [x: number, y: number]): void | { error: any } {
+  /**
+   * Predicate indicating whether given position is empty within the arena provided.
+   */
+  export function isSquareEmpty(position: Square, within: ArenaSquares): boolean {
     const [x, y] = position;
-
-    if (x >= this.width 
-    || x < 0) {
-      return {
-        error: `Couldn't set ${entity} at non-existant X position ${position[0]}`,
-      };
-    }
-
-    if (y >= this.height
-    || y < 0) {
-      return {
-        error: `Couldn't set ${entity} at non-existant Y position ${position[0]}`,
-      };
-    }
-
-    this.squares[x][y] = entity;
+    return within[x] !== undefined 
+      && within[x][y] === null;
   }
 
-  legalMovementsFrom(position: [x: number, y: number]): Direction[] {
+  /**
+   * Given a position within an arena, return a list of directions that could legally
+   * be moved to from that position.
+   */
+  export function legalMovementsFrom(position: Square, within: ArenaSquares): Direction[] {
     const [x, y] = position;
     const legalDirections: Direction[] = [];
 
-    if (this.squares[x - 1] !== undefined
-    && this.squares[x - 1][y] === null) {
+    if (within[x - 1] !== undefined
+    && within[x - 1][y] === null) {
       legalDirections.push('up');
     }
 
-    if (this.squares[x + 1] !== undefined
-    && this.squares[x + 1][y] === null) {
+    if (within[x + 1] !== undefined
+    && within[x + 1][y] === null) {
       legalDirections.push('down');
     }
  
-    if (this.squares[x] !== undefined
-    && this.squares[x][y - 1] === null) {
+    if (within[x] !== undefined
+    && within[x][y - 1] === null) {
       legalDirections.push('left');
     }
 
-    if (this.squares[x] !== undefined
-    && this.squares[x][y + 1] === null) {
+    if (within[x] !== undefined
+    && within[x][y + 1] === null) {
       legalDirections.push('right');
     }
 
     return legalDirections;
   }
 
-  has(position: [x: number, y: number]): boolean {
-    return this.squares[position[0]] !== undefined 
-      && this.squares[position[0]][position[1]] !== undefined;
-  }
+  /**
+   * Set the given entity (or empty) to the specified position within the arena provided.
+   * If the square does not exist, returns an error message in an object.
+   * Otherwise updates the arena in place and returns nothing.
+   */
+  export function set(
+    entity: string | null,
+    position: Square,
+    within: ArenaSquares
+  ): void | { error: any } {
+    const [x, y] = position;
 
-  isSquareEmpty(position: [number, number]): boolean {
-    return this.squares[position[0]] !== undefined 
-      && this.squares[position[0]][position[1]] === null;
-  }
-
-  value(): ArenaSquares {
-    return this.squares;
-  }
-
-  display(): string {
-    // Convert empty (null) squares to whitespace ' ',
-    // convert entities into 'sprites' (single characters)
-    const format = (squares: ArenaSquares): string => {
-      const displaySquare = (entity: string | null): string => 
-        ` ${entity === null ? ' ' : toSprite(entity)} `;
-
-      // Columns are separated by pipes, rows by newlines
-      return squares.map(row =>
-          row.map(col => displaySquare(col)).join('|')
-        ).join('\n');
+    if (x >= within.length 
+    || x < 0) {
+      return {
+        error: `Couldn't set ${entity} at non-existant X position ${position[0]}`,
+      };
     }
 
-    const formatted = format(this.squares);
-    console.log(formatted);
-    return formatted;
+    if (y >= within[0].length
+    || y < 0) {
+      return {
+        error: `Couldn't set ${entity} at non-existant Y position ${position[0]}`,
+      };
+    }
+
+    within[x][y] = entity;
   }
+
+  /**
+   * Predicate indicating whether given position is within the bounds of the arena provided.
+   */
+  export function has(
+    position: Square,
+    within: ArenaSquares
+  ): boolean {
+    return within[position[0]] !== undefined 
+      && within[position[0]][position[1]] !== undefined;
+  }
+}
+
+/**
+ * Given a square and a direction, return the square that is in that direction.
+ */
+export function squareFromDirection(
+  origin: Square,
+  direction: Direction
+): [number, number] {
+  switch (direction) {
+    case "up":    return [origin[0] - 1, origin[1]];
+    case "down":  return [origin[0] + 1, origin[1]];
+    case "left":  return [origin[0],     origin[1] - 1];
+    case "right": return [origin[0],     origin[1] + 1];
+  }
+}
+
+/**
+ * Given two squares, return their relationship as a direction, or
+ * `undefined` if the squares are not adjacent.
+ * FIXME - This should probably be updated to check strict adjacency,
+ *          ie no more than 1 unit away.
+ */
+export function directionFromSquares(
+  start: Square,
+  end: Square 
+): Direction | undefined {
+  const [startX, startY] = start;
+  const [endX, endY] = end;
+
+  let possible: Direction[] = ["left", "right", "up", "down"];
+
+  if (endX > startX) {
+    possible = possible.filter(d => d !== "left");
+  } else if (endX < startX) {
+    possible = possible.filter(d => d !== "right");
+  } else {
+    // If it's equal then there is no horizontal movement, only vertical
+    possible = possible.filter(d => d !== "right" && d !== "left");
+  }
+
+  if (endY > startY) {
+    possible = possible.filter(d => d !== "down");
+  } else if (endY < startY) {
+    possible = possible.filter(d => d !== "up");
+  } else {
+    possible = possible.filter(d => d !== "up" && d !== "down");
+  }
+
+  // Since we've filtered out all the illegal directions,
+  // the first index will either be the only remaining legal direction
+  // or `undefined` if there are no legal moves left.
+  return possible[0];
 }
 

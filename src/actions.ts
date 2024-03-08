@@ -1,56 +1,36 @@
+import { Square } from "./arena";
+import { GameState } from "./game";
+
 export type Direction =
   | "left"
   | "right"
   | "up"
   | "down";
 
-
-// 0, 0 is always current tile,
-// x & y are relative to current
-export type Tile = [number, number];
-
-export type Option<T> = | T | null;
-
-export type Action = {
+export type GameAction = {
   name: string;
   inputMovement: Direction[];
-  outputEffectedTiles: Tile[];
-  // Function which operates on any entities which reside
-  //  in the outputEffectedTiles, relative to the ending position of
-  //  the entity inducing this action.
-  outputEffect: (entities: Option<any>[]) => void
+  outputEffectedTiles: Square[];
+
+  // Function which updates the gamestate
+  outputEffect: (state: GameState) => void
 };
 
-const excelsior: Action = {
+export const ExcelsiorAction: GameAction = {
   name: "Excelsior",
   inputMovement: ["left", "right", "right"],
   outputEffectedTiles: [[-1, 1]],
-  outputEffect: (entities: Option<any>[]) => {
-    for (let entityOpt of entities) {
-      if (entityOpt === null) continue;
-
-      // If there is an entity in the effected tile,
-      // subtract 1 from its health.
-      entityOpt.currentHealth -= 1;
-    }
+  outputEffect: (_state: GameState) => {
+    console.log('Excelsior!');
   }
 };
 
-const multiStrike: Action = {
-  name: "Multi Strike",
-  inputMovement: ["left", "right", "down", "left"],
-  outputEffectedTiles: [
-    [-1, 1],
-    [-1, 0]
-  ],
-  outputEffect: (entities: Option<any>[]) => {
-    for (let entityOpt of entities) {
-      if (entityOpt === null) continue;
-
-      // If there is an entity in the effected tile,
-      // subtract 1 from its health.
-      entityOpt.currentHealth -= 1;
-    }
+export const KowabungaAction: GameAction = {
+  name: "Kowabunga",
+  inputMovement: ["down", "right", "up"],
+  outputEffectedTiles: [[1, 0]],
+  outputEffect: (_state: GameState) => {
+    console.log('Kowabunga!');
   }
 };
 

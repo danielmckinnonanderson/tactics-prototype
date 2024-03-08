@@ -1,47 +1,30 @@
 import { Direction } from './src/actions';
-import { Arena } from './src/arena';
+import { Arena, ArenaSquares } from './src/arena';
+import { Entity, GameState, initialGameState } from './src/game';
 
-// Entities are just an identifier, in this case their names
-const entities = ['joe', 'ganesh', 'ashley', 'devon'] as const;
-type Entity = (typeof entities)[keyof typeof entities];
-
-// Our fake sprites, single-character representations of entities
-const sprites = new Map<Entity, string>([
-  ['joe', 'J'],
-  ['ganesh', 'G'],
-  ['ashley', 'A'],
-  ['devon', 'D']
-]);
-
-const teams = new Map<Entity, 0 | 1>([
-  ['joe', 0],
-  ['ganesh', 0],
-  ['ashley', 1],
-  ['devon', 1]
-]);
-
-const arena: Arena = new Arena(9, 12);
-
-// Update starting positions
-arena.set(entities[0], [3, 2]);
-arena.set(entities[1], [6, 2]);
-arena.set(entities[2], [3, 9]);
-arena.set(entities[3], [6, 9]);
-
-type TakingTurnState = {
+type TurnState = {
+  maxMovementPoints: number;
   movementPointsRemaining: number;
   movementHistory: Direction[];
   ownerEndedTurn: boolean;
 };
 
-function main(): void {
-  const currentTurnIdx: keyof typeof entities = 0;
+// The whole shebang.
+// Pass in a list of commands to be yielded in order (for 
+//  testing purposes) or use the default stdin
+//  and read commands from the console.
+function main(inputs: AsyncIterable<string> = console): void {
+  const entities = ["Fortitude", "Justice", "Temperance", "Prudence"];
+  const game: GameState = initialGameState(entities);
+  const arena: ArenaSquares = Arena.create(9, 12);
 
+  let currentTurnIdx: number = 0;
   let winConditionAcheived: boolean = false;
 
   while (!winConditionAcheived) {
-    const intermediateState: TakingTurnState = {
+    const intermediateState: TurnState = {
       // Every entity will get 3 movement points for now
+      maxMovementPoints: 3,
       movementPointsRemaining: 3,
 
       // Update movement history as the owner inputs legal movements
@@ -54,26 +37,24 @@ function main(): void {
     };
 
     while (intermediateState.ownerEndedTurn === false) {
-      const takingTurn: Entity = entities[currentTurnIdx];
+      const takingTurn: Entity = game.entities[currentTurnIdx];
 
       // Get the current position of the entity
-      const maybeFound: [number, number] | undefined = arena.find(takingTurn);
+      const position = game.positions.get(takingTurn)!;
 
-      if (maybeFound === undefined) {
-        throw new Error(`Couldn't find ${takingTurn} in the arena, fatal error!`);
-      }
-
-      const [x, y]: [number, number] = maybeFound;
-      
       // Get list of legal movements given entity's position
-      const legalMovements: Direction[] = arena.legalMovementsFrom([x, y]);
+      const legalMovements: Direction[] = Arena.legalMovementsFrom(position, arena);
+
       // Get list of possible actions for this entity
 
-      // Poll for movement input
+      // Poll for user input command
 
-      // Induce movement
+      // Induce command (move or end turn)
 
-      // Check the 
+      // Check remaining movement points, if zero
+      //  then (optionally) induce action satisfied by movementHistory
+      //  and proceed to next turn
+      currentTurnIdx = (currentTurnIdx + 1) % game.entities.length;
     }
   }
 }

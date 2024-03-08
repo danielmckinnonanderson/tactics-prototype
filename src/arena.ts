@@ -181,6 +181,16 @@ export function directionFromSquares(
   const [startX, startY] = start;
   const [endX, endY] = end;
 
+  if (startX === endX && startY === endY) {
+    // There is no valid movement to end on the same square
+    return undefined;
+  }
+
+  if (Math.abs(endX - startX) > 1 || Math.abs(endY - startY) > 1) {
+    // Distance of greater than one means the squares are not adjacent
+    return undefined;
+  }
+
   let possible: Direction[] = ["left", "right", "up", "down"];
 
   if (endX > startX) {

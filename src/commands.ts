@@ -1,32 +1,26 @@
 import { Direction } from "./actions";
-import { Arena, ArenaSquares } from "./arena";
+import { Square } from "./arena";
+import { Entity, GameState } from "./game";
 
 // Command pattern to encapsulate user actions during their turn
 // In-game AI & player will be expected to produce a series of
 // commands during their turn
-
 export const MoveCommand = (
-  entity: any,
-  arena: ArenaSquares,
+  entity: Entity,
+  game: GameState,
   direction: Direction
 ) => {
-  if (!("name" in entity)) {
-    console.warn(`Entity ${entity} tried to induce a move command, but they have no name.`);
-    return;
-  }
+  const current: Square | undefined = game.positions.get(entity);
 
-  const maybeFound = arena.find(entity.name);
-
-  if (!maybeFound) {
-    console.warn(`Entity ${entity} tried to induce a move command, but they were not found in the arena.`);
+  if (!current) {
+    console.error(`Entity {entity} tried to induce a move command, but has no position.`);
     return;
   }
 
   // FIXME
   // At this point we know we have the position of the target entity,
   // so let's figure out what legal moves we have
-  // const found: [number, number] = maybeFound;
-  // const legalMoves = Arena.legalMovementsFrom(found);
+
 
   // if (legalMoves.length === 0) {
   //   console.warn(`Entity {entity} tried to induce a move command, but has no legal moves.`);

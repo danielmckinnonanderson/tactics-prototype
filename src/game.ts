@@ -25,6 +25,9 @@ export type GameState = {
   // Current position of entity within the arena
   positions: Map<Entity, Square>;
 
+  // Irregular sizes / shapes of arena are not supported
+  arenaDimensions: { width: number, height: number};
+
   // All actions that the entity *could* utilize (does not change)
   actions: Map<Entity, GameAction[]>;
 
@@ -41,7 +44,6 @@ export function initialGameState(entities: Entity[]): GameState {
   if (entities.length !== 4) {
     throw new Error(`Only *exactly* four entities are supported right now bossman.`);
   }
-
 
   const health = entities.reduce((acc, entity) => {
     acc.set(entity, defaultHealth());
@@ -86,6 +88,7 @@ export function initialGameState(entities: Entity[]): GameState {
 
   return {
     entities,
+    arenaDimensions: { width: 0, height: 0 },
     teams,
     movingTowards,
     health,

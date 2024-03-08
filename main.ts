@@ -18,6 +18,10 @@ function main(inputs: AsyncIterable<string> = console): void {
   const game: GameState = initialGameState(entities);
   const arena: ArenaSquares = Arena.create(9, 12);
 
+  // Get the iterator here so that we can just 'pop' 
+  //  our next input from within the game loop
+  const iterator = inputs[Symbol.asyncIterator]();
+
   let currentTurnIdx: number = 0;
   let winConditionAcheived: boolean = false;
 
@@ -47,7 +51,10 @@ function main(inputs: AsyncIterable<string> = console): void {
 
       // Get list of possible actions for this entity
 
-      // Poll for user input command
+      // Poll for user input
+      const input = iterator.next();
+
+      // Check if input corresponds to a valid command
 
       // Induce command (move or end turn)
 

@@ -14,6 +14,11 @@ describe('Game', () => {
     expect(result.health.get("galba")?.max).toEqual(13);
     expect(result.health.get("otho")?.current).toEqual(13);
 
+    expect(result.teams.size).toEqual(4);
+
+    expect(result.arenaDimensions.width).toEqual(0);
+    expect(result.arenaDimensions.height).toEqual(0);
+
     // Positions should not be initialized by default
     expect(result.positions.size).toEqual(0);
 

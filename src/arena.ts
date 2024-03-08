@@ -1,4 +1,5 @@
 import { Direction } from "./actions";
+import { Entity } from "./game";
 
 // Arena is a 2D array of tiles, where a tile
 // is either null (for unoccupied) or a string
@@ -150,6 +151,57 @@ export namespace Arena {
   ): boolean {
     return within[position[0]] !== undefined 
       && within[position[0]][position[1]] !== undefined;
+  }
+
+  export function getLegalMoves(
+    from: Square,
+    positions: Map<Entity, Square>,
+    arenaDimensions: { width: number, height: number },
+  ): Direction[] {
+    const [x, y] = from;
+
+    // If the square is not within the arena, return an empty array
+    if (x < 0 || x >= arenaDimensions.height || y < 0 || y >= arenaDimensions.width) {
+      return [];
+    }
+
+    // Construct our result. We will remove illegal moves as we iterate
+    let result: Direction[] = ["up", "down", "left", "right"];
+
+    // Loop over all entity/position key-value pairs
+    // and determine if the entity is adjacent to the given square
+    for (const [_entity, position] of positions) {
+      if (from === position) {
+        // This is us
+        continue;
+      }
+
+      // If the entity is adjacent to the given square, then that is
+      //  not a legal move since the square is occupied
+      const direction = directionFromSquares(from, position);
+      if (direction) {
+        result = result.filter(d => d !== direction);
+      }
+    }
+
+    // TODO - This seems wrong. Need to solidify what I actually mean
+    //        with the elements of the tuple. If first element is really
+    //        'x', then this is wrong since it treats x as the row index rather
+    //        than the column index.
+    //
+    // Lastly, remove an direction that would take us out of bounds
+    if (x === 0) {
+      result = result.filter(d => d !== "up");
+    } else if (x === arenaDimensions.height - 1) {
+      result = result.filter(d => d !== "down");
+    }
+    if (y === 0) {
+      result = result.filter(d => d !== "left");
+    } else if (y === arenaDimensions.width - 1) {
+      result = result.filter(d => d !== "right");
+    }
+
+    return result;
   }
 }
 

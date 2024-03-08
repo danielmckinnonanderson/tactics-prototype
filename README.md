@@ -1,5 +1,11 @@
 # tactics-proto
 
+Sketching out some ideas for a turn-based "tactics" game.
+
+This project uses 🅱️un as its Typescript / Javascript runtime.
+
+## Setup
+
 To install dependencies:
 
 ```bash
@@ -12,4 +18,8 @@ To run:
 bun run main.ts
 ```
 
-This project was created using `bun init` in bun v1.0.13. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
+To run the tests
+```bash
+bun run test
+```
+
